@@ -8,6 +8,20 @@ Versioning is informal - no git tags have been applied yet.
 
 ---
 
+## [0.11.1] - 2026-09-23
+
+### Fixed
+
+- The lock half's rounded entry transition no longer leaves coincident faces in the mesh. It was built as a hemisphere — `difference() { sphere(_channel_radius); cylinder(h = _channel_radius * 2, r = _channel_radius * 2); }` — whose cutting plane passes exactly through the sphere's centre. That plane is also the swept torus's cross-section centre and the entry shaft's base, so three surfaces meet on one circle, and CGAL keeps the contact as a pair of coincident triangles instead of merging it. The result is still a closed surface, so OpenSCAD raises nothing and the file reaches a slicer as a "non-manifold" warning to be repaired. The cut was redundant: the sphere's upper half already lies inside the entry shaft unioned beside it, so the bare sphere gives the same solid without the exact contact.
+
+### Notes
+
+- **The solid is unchanged**; only the tessellation is. Twelve keyed lock halves on a 56.5 mm circle, `$fa = 2` / `$fs = 0.6`, `interface_radius = 10`, `shell_thickness = 2.5`, `part_height = 18`, `pin_angles = [0, 95, 240]`, `pin_radius = 1.2`, `sweep_angle = 30`, outer/CW: 35620.17762 mm³ before and 35620.17737 after, identical bounding box, and the 8 edges shared by more than two faces and 4 repeated triangles become none.
+- Facet counts move a little either way, because the hemisphere's rim circle is gone. Against 0.11.0: `inner_2pin` 29112 → 29112, `inner_3pin_thick_shell` 42926 → 42926, `minimal` 28432 → 28400, `outer_3pin` 43276 → 43314, `outer_4pin_ccw` 57632 → 57616, `keyed_3pin` 58714 → 58794, `assembly_shell_only_preview` 188564 → 188754. Every example's volume is identical to eight significant figures and no bounding box moves. This is the first release since 0.10.0 where the multiset is not identical.
+- A single coupling never showed it, at any tessellation — the shipped examples are all clean before and after. It takes several lock halves in one union before CGAL trips, four in the case above, and it is erratic with the count (three clean, four not, six fewer than five). That is why it surfaced in a consumer with twelve ports on a lid rather than here.
+
+---
+
 ## [0.11.0] - 2026-08-11
 
 ### Added

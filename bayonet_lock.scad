@@ -1,7 +1,7 @@
 // simple bayonet cylindrical locking mechanism
 // Cameron K. Brooks
 // MIT License
-// version 0.11.0
+// version 0.11.1
 
 // ----- pin pattern -----
 // Evenly spaced pins give the coupling that spacing's rotational symmetry, so an n-pin
@@ -283,12 +283,13 @@ module _bayonet_channel(
             translate([pin_interface_r, 0, channel_depth]) {
               cylinder(h=part_height - channel_depth + _channel_radius, r=_channel_radius);
             }
-            // rounded entry transition
+            // Rounded entry transition. The whole sphere, not a hemisphere: its upper half is
+            // already inside the entry shaft unioned above, so cutting it away changes nothing
+            // about the solid and costs something. The cutting plane passed through the sphere's
+            // centre, which is also the torus's cross-section centre and the shaft's base - three
+            // surfaces meeting on one circle - and CGAL leaves that contact as coincident faces.
             translate([pin_interface_r, 0, channel_depth]) {
-              difference() {
-                sphere(_channel_radius);
-                cylinder(h=_channel_radius * 2, r=_channel_radius * 2);
-              }
+              sphere(_channel_radius);
             }
             // curved sweep path
             // Angular correction so the torus cross-section meets the entry shaft tangentially.
