@@ -1,4 +1,4 @@
-// Example: keyed 3-pin coupling - one locked orientation instead of three
+// A keyed 3-pin coupling: one locked orientation instead of three.
 // Cameron K. Brooks - MIT License
 
 use <../bayonet_lock.scad>;

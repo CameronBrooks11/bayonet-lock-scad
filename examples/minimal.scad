@@ -1,4 +1,4 @@
-// Example: minimal usage - bare module call, no neck, no derived variables
+// The bare minimum: one bayonet() call per half, default shell and entry depth.
 // Cameron K. Brooks - MIT License
 
 use <../bayonet_lock.scad>;

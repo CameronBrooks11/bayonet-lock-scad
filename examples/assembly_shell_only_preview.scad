@@ -1,4 +1,4 @@
-// Example: composite assembly that previews fast via shell_only
+// An assembly of several couplings that previews fast with shell_only.
 // Cameron K. Brooks - MIT License
 //
 // The locking channel is a boolean-heavy cut, so an assembly holding several bayonets
