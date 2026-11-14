@@ -4,7 +4,33 @@
 
 All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-Versioning is informal - no git tags have been applied yet.
+Releases from 0.11.0 on are tagged (`v0.11.0`, `v0.11.1`, ...), so a consumer can pin a tag
+instead of a commit. Earlier versions are not tagged.
+
+---
+
+## [0.12.0] - 2026-11-13
+
+### Changed
+
+- **`sweep_angle` must now be less than `bayonet_max_sweep_angle()`**, the smallest gap between pins less two channel half-angles, where before it only had to be less than the gap. Each channel runs past its sweep by the entry transition, so as the sweep grows its end wall thins against the next pin's entry shaft and then goes: the lock still holds the pin against a straight pull, but nothing stops the turn, and an over-turned pin reaches the next shaft and lifts out. Measured by over-turning the locked pin and taking the largest overlap with the lock, the stop (an overlap of 10% of the pin's volume) was lost at a sweep of 108.4° for 3 pins at `interface_radius = 10`, `pin_radius = 1`, `allowance = 0.2` (allowed up to 120° before, 107.4° now); 93.8° for 3 pins at radius 5 and pin 1.2 (now 90.9°); 79.3° for 4 pins at radius 29.15 and pin 3 (now 77.7°); and 164.9° for 2 pins at radius 8 (now 164.3°). In each the stop goes 1.7 to 1.9 half-angles short of the next pin. A design that now fails this assert had no turn stop.
+- **`part_height - entry_depth` must be at least `pin_radius + allowance / 2`**, or the channel breaks out of the part's bottom face. This was not checked before.
+
+### Added
+
+- `bayonet_max_sweep_angle(pins, interface_radius, pin_radius, allowance)`: the ceiling above. `pins` is a pin count or a list of pin angles.
+- `bayonet_locked_rotation(sweep_angle, turn_direction)`: the turn from where `bayonet()` draws the pin half to locked, `-sweep_angle` for `"CW"` and `+sweep_angle` for `"CCW"`.
+- `tests/test_bayonet.py` (`just test`), checking the coupling as a mechanism across inner and outer pins, both turn directions, 2 to 4 pins, keyed patterns and both consumers' sizes: the halves are clear at entry and lift apart, are clear when locked and a lift is blocked, collide when turned the wrong way, and the lock stops an over-turn. Also the two limits above at their boundaries, keying, the helper functions, `shell_only`, every example, and each half's volume.
+- README pictures (`just images`).
+
+### Fixed
+
+- **The mating convention was documented backwards.** The README and a comment on the pin sphere said two halves at a common origin are locked, and that turning the pin half by `-sweep_angle` (CW) shows the entry position. It is the other way round: at a common origin the pins sit at the channel mouths and the pin half lifts straight out; turned by `-sweep_angle` (CW) or `+sweep_angle` (CCW) it is locked and a lift is blocked. Measured for inner and outer pins with both turn directions. Two examples drew their "locked" couplings at entry; `keyed_3pin` and `assembly_shell_only_preview` now turn the pin half by `bayonet_locked_rotation()`.
+
+### Notes
+
+- **No geometry changes.** 198 renders of `bayonet()` across both halves, inner and outer pins, both turn directions, 2 to 4 pins, four sizes, two sweeps, keyed patterns and `shell_only`, and the five examples not edited, are byte-identical STLs before and after. `keyed_3pin` and `assembly_shell_only_preview` differ only by turning their pin halves to locked.
+- Both consumers that pin this library build unchanged against it: uwo-fast/feedstock-hopper's check cases (every part at every size, both assemblies, every module file and example) give byte-identical STLs and echo output, and uwo-fast/open-source-bioreactor's echo transcripts (every vessel through the bioreactor, head and frame, and every registered build) are identical, and match its committed ones.
 
 ---
 

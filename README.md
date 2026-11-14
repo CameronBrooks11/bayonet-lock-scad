@@ -17,6 +17,10 @@ Key features:
 
 The design improves upon earlier versions by modularizing the code and addressing issues from the original implementation. Contributions and feedback are welcome.
 
+![The lock half (left) and the pin half (right): three channels, three pins](images/halves.png)
+
+![A locked coupling cut through one pin: the pin sits at its channel's end, under the wall that holds it](images/locked_cutaway.png)
+
 ## Usage
 
 ```scad
@@ -31,7 +35,7 @@ bayonet(
   // entry_depth  = 5,        // optional; defaults to part_height * 0.5
   number_of_pins  = 3,        // or pin_angles = [...], see keying below
   pin_radius      = 1,
-  sweep_angle     = 30,       // degrees; must be < the smallest gap between pins
+  sweep_angle     = 30,       // degrees; must be < bayonet_max_sweep_angle(...), see below
   pin_direction   = "outer",  // "inner" | "outer"
   turn_direction  = "CW",     // "CW" | "CCW"
   // shell_only   = false     // optional; omit the locking features, see below
@@ -57,8 +61,15 @@ pin_angles = bayonet_keyed_pin_angles(3, 25);   // [0, 95, 240] - evenly spaced,
 bayonet(half = "lock", pin_angles = pin_angles, ...);
 ```
 
-Give exactly one of `number_of_pins` or `pin_angles`. `sweep_angle` must fit the smallest gap
-in the pattern, which for even spacing is the familiar `360/number_of_pins`.
+Give exactly one of `number_of_pins` or `pin_angles`.
+
+`sweep_angle` must be less than `bayonet_max_sweep_angle(pins, interface_radius, pin_radius,
+allowance)`: the smallest gap between pins, less two channel half-angles. Each channel runs on
+past its sweep, so as the sweep grows its end wall thins against the next pin's entry shaft
+and then goes, and an over-turned pin reaches that shaft and lifts out. Measured on five
+geometries, the stop is lost 1.7 to 1.9 half-angles short of the next pin. For 3 pins at
+`interface_radius = 10`, `pin_radius = 1` and `allowance = 0.2`, the limit is 107.4°, where the smallest gap alone
+would allow 119°.
 
 **Being keyed is not the same as being blocked.** Symmetry only says a wrong seating is not
 *identical*; whether it is *prevented* depends on how far the offset throws the pins clear of
@@ -77,8 +88,10 @@ A key smaller than that still reads as keyed and still lets a wrong attempt star
 | `bayonet_pin_pattern_order(angles)`                               | Rotational symmetry order; `1` is keyed, even spacing gives the pin count |
 | `bayonet_pin_pattern_is_keyed(angles)`                            | `order == 1`                                                             |
 | `bayonet_pin_pattern_margin(angles)`                              | Degrees by which the worst pin misses a mouth at the easiest wrong seating |
-| `bayonet_pin_pattern_min_gap(angles)`                             | Smallest gap between adjacent pins; the ceiling on `sweep_angle`         |
+| `bayonet_pin_pattern_min_gap(angles)`                             | Smallest gap between adjacent pins                                       |
 | `bayonet_channel_half_angle(interface_radius, pin_radius, allowance)` | Angular half-width of the entry shaft                                |
+| `bayonet_max_sweep_angle(pins, interface_radius, pin_radius, allowance)` | The ceiling on `sweep_angle`; `pins` is a count or a list of angles |
+| `bayonet_locked_rotation(sweep_angle, turn_direction)`            | Turn from entry (common origin) to locked: `-sweep_angle` CW, `+sweep_angle` CCW |
 
 ## Fast assembly previews (`shell_only`)
 
@@ -128,22 +141,27 @@ at `$fn = 64`, the CGAL render drops from ~104 s to ~3.8 s.
 ## Mating the two halves
 
 Both halves are authored in a single frame. Instantiated at a common origin with matching
-parameters they are **in the locked position** — no translation or rotation needed:
+parameters they are at the **entry position**: the pins sit at the channel mouths, and the pin
+half lifts straight back out.
 
 ```scad
 bayonet(half = "lock", ...);
-bayonet(half = "pin",  ...);   // same origin, same parameters => locked
+bayonet(half = "pin",  ...);   // same origin, same parameters => entry, not yet turned
 ```
 
-To show them at the entry position instead — pins at the channel mouths, before the turn —
-rotate the pin half by `sweep_angle`, negative for `"CW"` and positive for `"CCW"`:
+To show them **locked**, turn the pin half by `bayonet_locked_rotation(sweep_angle,
+turn_direction)`: `-sweep_angle` for `"CW"`, `+sweep_angle` for `"CCW"`. There the pins sit at
+the channel ends and a straight lift is blocked:
 
 ```scad
-rotate([0, 0, turn_direction == "CW" ? -sweep_angle : sweep_angle])
-  bayonet(half = "pin", ...);
+rotate([0, 0, bayonet_locked_rotation(sweep_angle, turn_direction)])
+  bayonet(half = "pin", ...);   // locked
 ```
 
-Any rotation between the two is a valid mid-travel position. All of this holds for any
+A part that has to face a particular way once locked (a keyed connector, a baffle) is
+therefore drawn turned back by the same angle, or its pins are: both consumers of this library
+that care about orientation do one or the other. Any rotation between entry and locked is a
+valid mid-travel position. All of this holds for any
 `entry_depth`, and throughout that range the halves stay clear of each other, so an
 `intersection()` of the two that is non-empty means the parameters do not match.
 
@@ -173,14 +191,36 @@ model.
 | `shell_thickness`  | mm > 0, optional       | Radial thickness from the interface to the inner or outer shell; defaults to `pin_radius * 2`                                 |
 | `allowance`        | mm ≥ 0                 | Radial clearance applied ±allowance/2 around the mating surface                                                               |
 | `part_height`      | mm                     | Total axial height of the connector                                                                                           |
-| `entry_depth`      | mm, optional           | Insertion depth from the top face before the bayonet turn begins; defaults to `part_height * 0.5` and must be < `part_height` |
+| `entry_depth`      | mm, optional           | Insertion depth from the top face before the bayonet turn begins; defaults to `part_height * 0.5`; `part_height - entry_depth` must be ≥ `pin_radius + allowance/2` so the channel stays inside the part |
 | `number_of_pins`   | int ≥ 1, optional      | Number of locking points, spaced evenly; give this or `pin_angles`, not both                                                  |
 | `pin_angles`       | list of degrees, optional | Explicit pin positions, replacing even spacing; an unequal pattern keys the coupling to one locked orientation             |
 | `pin_radius`       | mm                     | Radius of the locking pin sphere; explicit `shell_thickness` values must satisfy `pin_radius + allowance/2 ≤ shell_thickness` |
-| `sweep_angle`      | degrees                | Arc the pin travels; must be > 0 and < the smallest gap between pins (`360/number_of_pins` when evenly spaced)                |
+| `sweep_angle`      | degrees                | Arc the pin travels; must be > 0 and < `bayonet_max_sweep_angle(...)`, which keeps the lock a turn stop                |
 | `pin_direction`    | `"inner"` \| `"outer"` | Whether the pin protrudes toward the bore or toward the OD                                                                    |
 | `turn_direction`   | `"CW"` \| `"CCW"`      | Direction of the locking rotation                                                                                             |
 | `shell_only`       | bool, optional         | Omit the pin/channel features and emit only the bare shell; defaults to `$bayonet_shell_only`, then `false`                    |
+
+## Checks
+
+`just test` takes about 6 s on OpenSCAD 2026.10.15 and checks the coupling as a mechanism,
+for inner and outer pins, both turn directions, 2 to 4 pins, keyed patterns, and the sizes of
+two projects that use this library:
+
+- at entry (a common origin) the halves are clear and the pin half lifts straight out;
+- turned by `bayonet_locked_rotation()` they are clear and a straight lift is blocked;
+- turned the wrong way, they collide, and turned on past locked, the lock stops the pin;
+- just under `bayonet_max_sweep_angle()` the turn stop still holds, and just over it the
+  assert refuses the sweep; the channel-depth limit holds at its boundary;
+- a keyed pattern blocks the seating an even one accepts;
+- the helper functions, `shell_only`, every example, and each half's volume against
+  `tests/volumes.txt` (`just volumes` rewrites it after an intended geometry change).
+
+`just images` renders the pictures above.
+
+## Versions
+
+Releases from 0.11.0 on are tagged: pin a tag, such as `v0.12.0`, rather than a commit. See
+[CHANGELOG.md](CHANGELOG.md).
 
 ## License & Attribution
 

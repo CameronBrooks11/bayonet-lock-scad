@@ -1,0 +1,14 @@
+3 pins outer CW | pin | 1314.68
+3 pins outer CW | lock | 1648.01
+3 pins outer CCW | pin | 1314.68
+3 pins outer CCW | lock | 1648.01
+3 pins inner CW | pin | 1705.12
+3 pins inner CW | lock | 1262.19
+3 pins inner CCW | pin | 1705.12
+3 pins inner CCW | lock | 1262.19
+2 pins inner CW, r8 | pin | 1122.71
+2 pins inner CW, r8 | lock | 777.33
+4 pins outer CCW, hopper | pin | 19614.83
+4 pins outer CCW, hopper | lock | 23095.53
+3 pins outer CW, bioreactor mini | pin | 345.18
+3 pins outer CW, bioreactor mini | lock | 521.58

@@ -37,13 +37,13 @@ module half(which) {
   );
 }
 
-// A complete coupling. Both halves share an origin and share parameters, which per this
-// library's convention means they are in the locked position - no offset or rotation.
+// A complete, locked coupling. At a common origin the halves are at entry, so the pin half is
+// turned by the sweep to lock it.
 // Note that half() never mentions shell_only: the special variable reaches it anyway,
 // which is the whole point when bayonet() calls are buried inside your own modules.
 module joint() {
   half("lock");
-  half("pin");
+  rotate([0, 0, bayonet_locked_rotation(30, "CW")]) half("pin");
 }
 
 // Four couplings spaced along a rail - the kind of assembly that gets painful to pan.
