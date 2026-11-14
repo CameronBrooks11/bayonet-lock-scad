@@ -1,7 +1,7 @@
 // simple bayonet cylindrical locking mechanism
 // Cameron K. Brooks
 // MIT License
-// version 0.11.1
+// version 0.12.0
 
 // ----- pin pattern -----
 // Evenly spaced pins give the coupling that spacing's rotational symmetry, so an n-pin
@@ -68,6 +68,26 @@ function bayonet_channel_half_angle(interface_radius, pin_radius, allowance) =
  */
 function bayonet_keyed_pin_angles(number_of_pins, key_angle) =
   [for (i = [0:number_of_pins - 1]) 360 / number_of_pins * i - (i == 1 ? key_angle : 0)];
+
+/**
+ * Largest sweep_angle that still leaves the lock a turn stop. Each channel runs past its sweep
+ * by the entry transition, so as the sweep grows its end wall thins against the next pin's entry
+ * shaft and then goes: an over-turned pin reaches that shaft and lifts out. Measured on five
+ * geometries (2 to 4 pins, interface radius 5 to 29, inner and outer, CW and CCW), the stop goes
+ * between 1.7 and 1.9 channel half-angles short of the next pin; this keeps a margin of 2.
+ * `pins` is a pin count (evenly spaced) or a list of pin angles.
+ */
+function bayonet_max_sweep_angle(pins, interface_radius, pin_radius, allowance) =
+  let (angles = is_num(pins) ? [for (i = [0:pins - 1]) 360 / pins * i] : pins)
+  bayonet_pin_pattern_min_gap(angles) - 2 * bayonet_channel_half_angle(interface_radius, pin_radius, allowance);
+
+/**
+ * The turn that takes a pin half from where bayonet() draws it to locked. Both halves drawn at a
+ * common origin are at ENTRY: the pins sit at the channel mouths and lift straight out. Turned
+ * by this, -sweep_angle for "CW" and +sweep_angle for "CCW", they are locked.
+ */
+function bayonet_locked_rotation(sweep_angle, turn_direction) =
+  turn_direction == "CW" ? -sweep_angle : sweep_angle;
 
 module bayonet(
   half,
@@ -168,13 +188,25 @@ module bayonet(
     sweep_angle > 0,
     str("bayonet: sweep_angle must be > 0, got: ", sweep_angle)
   );
-  // Generalises the old sweep < 360/number_of_pins: with the pins spaced evenly that gap is
-  // 360/n, and with them keyed it is whichever pair sits closest.
+  // The sweep has to leave the channel an end wall short of the next pin's entry shaft, or an
+  // over-turned pin reaches that shaft and lifts out. See bayonet_max_sweep_angle().
   assert(
-    sweep_angle < bayonet_pin_pattern_min_gap(_pin_angles),
+    sweep_angle < bayonet_max_sweep_angle(_pin_angles, interface_radius, pin_radius, allowance),
     str(
-      "bayonet: sweep_angle (", sweep_angle, ") must be < the smallest gap between pins (",
-      bayonet_pin_pattern_min_gap(_pin_angles), ") to avoid channel overlap"
+      "bayonet: sweep_angle (", sweep_angle, ") must be < ",
+      bayonet_max_sweep_angle(_pin_angles, interface_radius, pin_radius, allowance),
+      ": the smallest gap between pins (", bayonet_pin_pattern_min_gap(_pin_angles),
+      ") less two channel half-angles, or the lock has no turn stop"
+    )
+  );
+  // The channel bottoms out entry_depth below the top face, and is pin_radius + allowance/2
+  // round; any deeper and it breaks out of the bottom face.
+  assert(
+    part_height - _entry_depth >= pin_radius + allowance / 2,
+    str(
+      "bayonet: part_height - entry_depth (", part_height - _entry_depth,
+      ") must be >= pin_radius + allowance/2 (", pin_radius + allowance / 2,
+      ") or the channel breaks out of the bottom face"
     )
   );
   assert(
@@ -352,10 +384,11 @@ module _bayonet_channel(
           }
         }
       } else if (half == "pin") {
-        // Locking pin sphere, at the same height as the lock's channel end so that the two
-        // halves are authored in one frame: placed at a common origin they are locked
-        // together. Measuring from the pin's own base instead would only line up when
-        // entry_depth happens to equal part_height / 2.
+        // Locking pin sphere, at the height of the lock's channel bottom so that the two halves
+        // are authored in one frame: placed at a common origin they are at ENTRY, the pins at
+        // the channel mouths, and bayonet_locked_rotation() turns them to locked. Measuring
+        // from the pin's own base instead would only line up when entry_depth happens to equal
+        // part_height / 2.
         translate([pin_interface_r, 0, channel_depth]) {
           sphere(pin_radius);
         }
