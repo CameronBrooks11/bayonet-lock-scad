@@ -9,6 +9,17 @@ instead of a commit. Earlier versions are not tagged.
 
 ---
 
+## [Unreleased]
+
+### Changed
+
+- The examples `outer_3pin`, `inner_2pin`, `inner_3pin_thick_shell` and `outer_4pin_ccw` are replaced by `configurator.scad`, which draws both halves with every parameter in the Customizer, side by side or locked, and echoes the `sweep_angle` limit for the chosen size.
+- Each example's first comment line now says what it shows, without the `Example:` prefix.
+
+### Added
+
+- `examples/canister.scad`: a printable jar whose rim is the lock half and a cap carrying the pin half, laid out for printing, with assembled and cut-away views.
+
 ## [0.12.0] - 2026-11-13
 
 ### Changed

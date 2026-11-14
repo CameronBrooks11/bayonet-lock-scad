@@ -169,15 +169,15 @@ See the [`examples/`](examples/) directory for ready-to-render configurations:
 
 | File                                                                  | What it shows                              |
 | --------------------------------------------------------------------- | ------------------------------------------ |
-| [`outer_3pin.scad`](examples/outer_3pin.scad)                         | Outer pin, 3 pins, CW, custom entry depth  |
-| [`inner_2pin.scad`](examples/inner_2pin.scad)                         | Inner pin, 2 pins, CCW, default entry depth |
-| [`inner_3pin_thick_shell.scad`](examples/inner_3pin_thick_shell.scad) | Inner pin, 3 pins, explicit thick shell    |
-| [`outer_4pin_ccw.scad`](examples/outer_4pin_ccw.scad)                 | Outer pin, 4 pins, CCW, default entry depth |
+| [`configurator.scad`](examples/configurator.scad)                     | Both halves with every parameter in the Customizer, side by side or locked |
+| [`canister.scad`](examples/canister.scad)                             | A printable jar and cap: the coupling joined to a part |
 | [`minimal.scad`](examples/minimal.scad)                               | Bare minimum call, default shell and entry depth |
 | [`keyed_3pin.scad`](examples/keyed_3pin.scad)                         | Keyed 3 pins, one locked orientation, with the blocked seating shown |
 | [`assembly_shell_only_preview.scad`](examples/assembly_shell_only_preview.scad) | Multi-joint assembly using `$bayonet_shell_only = $preview` |
 
-The first five render the lock and pin side-by-side for visual inspection. `keyed_3pin.scad`
+`configurator.scad` and `minimal.scad` render the lock and pin side by side. `canister.scad`
+makes the lock half a jar's rim and the pin half its cap, laid out for printing, with assembled
+and cut-away views. `keyed_3pin.scad`
 shows the halves locked and, beside them, the intersection at a wrong seating that a keyed
 pattern refuses; `assembly_shell_only_preview.scad` shows them assembled into a multi-joint
 model.
