@@ -50,9 +50,9 @@ module coupling(half) {
   );
 }
 
-// Locked: both halves at a common origin, as always.
+// Locked: the pin half turned from entry (the common origin) by the sweep.
 coupling("lock");
-coupling("pin");
+rotate([0, 0, bayonet_locked_rotation(sweep_angle, turn_direction)]) coupling("pin");
 
 // The seating that an unkeyed coupling would also have accepted. Turned 120 degrees the pins
 // land 25 degrees off the mouths, so intersecting the halves here is non-empty - it does not
