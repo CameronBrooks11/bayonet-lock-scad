@@ -1,0 +1,45 @@
+name: Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: test-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+
+      # The snapshot the docs engine pins, not apt's 2021.01, so the tests see the
+      # same Manifold renderer as the site. Update the date and sha256 together.
+      - name: Install OpenSCAD
+        env:
+          OPENSCAD_SNAPSHOT: "2026.10.15"
+          OPENSCAD_SHA256: "9d26e390d3a5c94f2e304d94d7b2eff77fb11fcd25829f2814de147ba92ac363"
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libegl1 libgl1 libopengl0 libfontconfig1 libharfbuzz0b
+          file="OpenSCAD-$OPENSCAD_SNAPSHOT-x86_64.AppImage"
+          curl -fsSL -o "$RUNNER_TEMP/$file" "https://files.openscad.org/snapshots/$file"
+          echo "$OPENSCAD_SHA256  $RUNNER_TEMP/$file" | sha256sum -c -
+          chmod +x "$RUNNER_TEMP/$file"
+          (cd "$RUNNER_TEMP" && "./$file" --appimage-extract > /dev/null)
+          printf '#!/bin/sh\nexec "%s/squashfs-root/AppRun" "$@"\n' "$RUNNER_TEMP" | sudo tee /usr/local/bin/openscad > /dev/null
+          sudo chmod +x /usr/local/bin/openscad
+          openscad --version
+
+      - name: Install just
+        uses: extractions/setup-just@v4
+
+      - name: Run the tests
+        run: just test
