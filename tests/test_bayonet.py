@@ -50,7 +50,11 @@ def run(openscad, out, defines, export="binstl"):
     cmd = [openscad, "--hardwarnings", "--export-format", export, "-o", out]
     for k, v in defines.items():
         cmd += ["-D", f"{k}={v}"]
-    return subprocess.run(cmd + [PROBE], capture_output=True, text=True)
+    r = subprocess.run(cmd + [PROBE], capture_output=True, text=True)
+    # A failed assert leaves the exit status at 0, so a WARNING or ERROR line fails it too.
+    if r.returncode == 0 and any(l.startswith(("WARNING", "ERROR")) for l in r.stderr.splitlines()):
+        r.returncode = 1
+    return r
 
 
 def volume(path):
@@ -129,8 +133,9 @@ def main():
         report(f"{name}: sweep {limit - 0.5:.1f} keeps its stop, {limit + 0.5:.1f} is refused", stop and refused,
                f"stop {'held' if stop else 'lost'}, over the limit {'refused' if refused else 'accepted'}")
 
-    # The channel stays inside the part: at the boundary it builds, just past it the assert stops it.
-    edge = {"CHECK": '"lock"', "H": 10, "ED": 10 - 1.1}
+    # The channel stays inside the part: just inside the boundary it builds, just past it the assert
+    # stops it. Exactly at it, 10 - 8.9 rounds below 1.1 and the assert refuses.
+    edge = {"CHECK": '"lock"', "H": 10, "ED": 10 - 1.11}
     ok_at = run(openscad, os.path.join(tmp, "e1.csg"), edge, export="csg").returncode == 0
     past = run(openscad, os.path.join(tmp, "e2.csg"), {**edge, "ED": 10 - 1.09}, export="csg")
     report("the channel-depth assert holds at its boundary", ok_at and "breaks out of the bottom face" in past.stderr,

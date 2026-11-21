@@ -24,17 +24,17 @@ joint_count = 4;
 
 // Shared parameters, so both halves of a joint mate.
 module half(which) {
-  bayonet(
-    half=which,
-    interface_radius=interface_radius,
-    allowance=0.2,
-    part_height=part_height,
-    number_of_pins=3,
-    pin_radius=1,
-    sweep_angle=30,
-    pin_direction="outer",
-    turn_direction="CW"
-  );
+    bayonet(
+        half=which,
+        interface_radius=interface_radius,
+        allowance=0.2,
+        part_height=part_height,
+        number_of_pins=3,
+        pin_radius=1,
+        sweep_angle=30,
+        pin_direction="outer",
+        turn_direction="CW"
+    );
 }
 
 // A complete, locked coupling. At a common origin the halves are at entry, so the pin half is
@@ -42,27 +42,27 @@ module half(which) {
 // Note that half() never mentions shell_only: the special variable reaches it anyway,
 // which is the whole point when bayonet() calls are buried inside your own modules.
 module joint() {
-  half("lock");
-  rotate([0, 0, bayonet_locked_rotation(30, "CW")]) half("pin");
+    half("lock");
+    rotate([0, 0, bayonet_locked_rotation(30, "CW")]) half("pin");
 }
 
 // Four couplings spaced along a rail - the kind of assembly that gets painful to pan.
 for (i = [0:joint_count - 1])
-  translate([i * interface_radius * 3, 0, 0])
-    joint();
+    translate([i * interface_radius * 3, 0, 0])
+        joint();
 
 // A per-call override still wins over the special variable, so one joint can stay fully
 // detailed for inspection while the rest of the assembly stays light during preview.
 translate([0, interface_radius * 3, 0])
-  bayonet(
-    half="lock",
-    interface_radius=interface_radius,
-    allowance=0.2,
-    part_height=part_height,
-    number_of_pins=3,
-    pin_radius=1,
-    sweep_angle=30,
-    pin_direction="outer",
-    turn_direction="CW",
-    shell_only=false
-  );
+    bayonet(
+        half="lock",
+        interface_radius=interface_radius,
+        allowance=0.2,
+        part_height=part_height,
+        number_of_pins=3,
+        pin_radius=1,
+        sweep_angle=30,
+        pin_direction="outer",
+        turn_direction="CW",
+        shell_only=false
+    );

@@ -10,3 +10,14 @@ volumes:
 images:
     openscad --render --imgsize 1200,700 --viewall --autocenter --colorscheme Tomorrow --camera 0,0,0,55,0,25,0 -D 'VIEW="halves"' -o images/halves.png images/pictures.scad
     openscad --render --imgsize 900,800 --viewall --autocenter --colorscheme Tomorrow --camera 0,0,0,75,0,-30,0 -D 'VIEW="locked_cutaway"' -o images/locked_cutaway.png images/pictures.scad
+
+# Everything CI runs, bar the tests
+check: fmt-check
+
+# Format the .scad sources with topiary (.topiary/languages.ncl)
+fmt:
+    git ls-files -z '*.scad' | xargs -0 -r topiary format
+
+# Check the .scad sources are formatted, without changing them
+fmt-check:
+    git ls-files -z '*.scad' | xargs -0 -r -n1 topiary format --check

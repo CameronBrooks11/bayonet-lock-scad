@@ -15,6 +15,8 @@ instead of a commit. Earlier versions are not tagged.
 
 - The examples `outer_3pin`, `inner_2pin`, `inner_3pin_thick_shell` and `outer_4pin_ccw` are replaced by `configurator.scad`, which draws both halves with every parameter in the Customizer, side by side or locked, and echoes the `sweep_angle` limit for the chosen size.
 - Each example's first comment line now says what it shows, without the `Example:` prefix.
+- The `.scad` sources are formatted with topiary 0.8.0 at a 4-space indent; `just check` checks it.
+- The tests fail a render that prints a `WARNING` or `ERROR` line, since a failed assert leaves the exit status at 0.
 
 ### Added
 

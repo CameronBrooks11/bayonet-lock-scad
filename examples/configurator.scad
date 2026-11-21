@@ -39,23 +39,23 @@ max_sweep = bayonet_max_sweep_angle(number_of_pins, interface_radius, pin_radius
 echo(str("sweep_angle ", sweep_angle, " of at most ", max_sweep, " for this pin count and size"));
 
 module half(which) {
-  bayonet(
-    half=which,
-    interface_radius=interface_radius,
-    shell_thickness=shell_thickness > 0 ? shell_thickness : undef,
-    allowance=allowance,
-    part_height=part_height,
-    entry_depth=entry_depth > 0 ? entry_depth : undef,
-    number_of_pins=number_of_pins,
-    pin_radius=pin_radius,
-    sweep_angle=sweep_angle,
-    pin_direction=pin_direction,
-    turn_direction=turn_direction
-  );
+    bayonet(
+        half=which,
+        interface_radius=interface_radius,
+        shell_thickness=shell_thickness > 0 ? shell_thickness : undef,
+        allowance=allowance,
+        part_height=part_height,
+        entry_depth=entry_depth > 0 ? entry_depth : undef,
+        number_of_pins=number_of_pins,
+        pin_radius=pin_radius,
+        sweep_angle=sweep_angle,
+        pin_direction=pin_direction,
+        turn_direction=turn_direction
+    );
 }
 
 half("lock");
 if (layout == "locked")
-  rotate([0, 0, bayonet_locked_rotation(sweep_angle, turn_direction)]) half("pin");
+    rotate([0, 0, bayonet_locked_rotation(sweep_angle, turn_direction)]) half("pin");
 else
-  translate([interface_radius * 3 + (shell_thickness > 0 ? shell_thickness : pin_radius * 2) * 2, 0, 0]) half("pin");
+    translate([interface_radius * 3 + (shell_thickness > 0 ? shell_thickness : pin_radius * 2) * 2, 0, 0]) half("pin");

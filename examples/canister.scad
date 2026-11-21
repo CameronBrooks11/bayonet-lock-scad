@@ -43,57 +43,57 @@ cap_gap = allowance;
 cap_height = coupling_height + cap_gap + floor_thickness;
 
 module coupling(which) {
-  bayonet(
-    half=which,
-    interface_radius=interface_radius,
-    shell_thickness=wall,
-    allowance=allowance,
-    part_height=coupling_height,
-    number_of_pins=number_of_pins,
-    pin_radius=pin_radius,
-    sweep_angle=sweep_angle,
-    pin_direction="outer",
-    turn_direction=turn_direction
-  );
+    bayonet(
+        half=which,
+        interface_radius=interface_radius,
+        shell_thickness=wall,
+        allowance=allowance,
+        part_height=coupling_height,
+        number_of_pins=number_of_pins,
+        pin_radius=pin_radius,
+        sweep_angle=sweep_angle,
+        pin_direction="outer",
+        turn_direction=turn_direction
+    );
 }
 
 // The jar: a cup whose rim, from z = 0 up, is the lock half.
 module jar() {
-  coupling("lock");
-  translate([0, 0, -depth - floor_thickness])
-    difference() {
-      cylinder(h=depth + floor_thickness, r=outer_radius);
-      translate([0, 0, floor_thickness]) cylinder(h=depth + 1, r=bore / 2);
-    }
+    coupling("lock");
+    translate([0, 0, -depth - floor_thickness])
+        difference() {
+            cylinder(h=depth + floor_thickness, r=outer_radius);
+            translate([0, 0, floor_thickness]) cylinder(h=depth + 1, r=bore / 2);
+        }
 }
 
 // The cap, drawn at entry on the jar: its pin half drops inside the rim, its top sits above it.
 module cap() {
-  coupling("pin");
-  // Carry the pin half's wall up through the gap to the top.
-  translate([0, 0, coupling_height])
-    difference() {
-      cylinder(h=cap_gap + 0.01, r=interface_radius - allowance / 2);
-      translate([0, 0, -1]) cylinder(h=cap_gap + 2, r=interface_radius - wall);
-    }
-  translate([0, 0, coupling_height + cap_gap]) cylinder(h=floor_thickness, r=outer_radius);
+    coupling("pin");
+    // Carry the pin half's wall up through the gap to the top.
+    translate([0, 0, coupling_height])
+        difference() {
+            cylinder(h=cap_gap + 0.01, r=interface_radius - allowance / 2);
+            translate([0, 0, -1]) cylinder(h=cap_gap + 2, r=interface_radius - wall);
+        }
+    translate([0, 0, coupling_height + cap_gap]) cylinder(h=floor_thickness, r=outer_radius);
 }
 
 module assembled() {
-  jar();
-  rotate([0, 0, bayonet_locked_rotation(sweep_angle, turn_direction)]) cap();
+    jar();
+    rotate([0, 0, bayonet_locked_rotation(sweep_angle, turn_direction)]) cap();
 }
 
 if (view == "print") {
-  translate([0, 0, depth + floor_thickness]) jar();
-  translate([outer_radius * 2 + 10, 0, cap_height]) rotate([180, 0, 0]) cap();
+    translate([0, 0, depth + floor_thickness]) jar();
+    translate([outer_radius * 2 + 10, 0, cap_height]) rotate([180, 0, 0]) cap();
 } else if (view == "assembled") {
-  assembled();
-} else if (view == "cut away") {
-  difference() {
     assembled();
-    // Remove the half nearest the default camera, which looks along +y.
-    translate([-outer_radius - 1, -outer_radius - 1, -depth - 10])
-      cube([2 * outer_radius + 2, outer_radius + 1, depth + cap_height + 20]);
-  }
+} else if (view == "cut away") {
+    difference() {
+        assembled();
+        // Remove the half nearest the default camera, which looks along +y.
+        translate([-outer_radius - 1, -outer_radius - 1, -depth - 10])
+            cube([2 * outer_radius + 2, outer_radius + 1, depth + cap_height + 20]);
+    }
 }
